@@ -18,6 +18,7 @@ type Redirector struct {
 	RedirectToFormat string
 	Bucket           string
 	StatePrefix      string
+	LinkPrefix       string
 	Region           string
 	S3               *s3.S3
 }
@@ -27,6 +28,7 @@ func NewRedirector() (*Redirector, error) {
 	ret := new(Redirector)
 	ret.RedirectToFormat = "%s"
 	ret.StatePrefix = "state/"
+	ret.LinkPrefix = ""
 
 	return ret, nil
 }
@@ -60,7 +62,7 @@ func (r Redirector) CreateLink(key string) (string, error) {
 	}
 
 	for {
-		linkPath = randString(6)
+		linkPath = r.createLinkPath()
 		b, err := r.linkPathExists(linkPath)
 
 		if err != nil {
@@ -162,6 +164,10 @@ func (r Redirector) setState(key, linkPath string) error {
 func (r Redirector) putObject(input *s3.PutObjectInput) error {
 	_, err := r.S3.PutObject(input)
 	return err
+}
+
+func (r Redirector) createLinkPath() string {
+	return r.LinkPrefix + randString(6)
 }
 
 func randString(n int) string {
